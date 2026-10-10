@@ -1,0 +1,16 @@
+{
+  "name": "modexa",
+  "version": "1.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.cjs",
+    "test": "node tests/reset.test.mjs && node tests/offline.test.mjs && node tests/ui.test.mjs && node tests/auth-gate.test.mjs && node tests/install.test.mjs && node tests/worker.test.mjs && node tests/billing-ui.test.mjs && node tests/credits.test.mjs && node tests/photo-share.test.mjs && node supabase/tests/isolation.mjs && node supabase/tests/billing.mjs && node supabase/tests/checkout.mjs",
+    "check": "node --check dist/app.js && node --check dist/install.js && node --check dist/sw.js && node --check dist/sync.js && node --check dist/local-store.js && node --check dist/plans.js && node --check dist/billing-ui.js && node --check dist/photo-share.js"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.5.8",
+    "fake-indexeddb": "6.2.4",
+    "jsdom": "26.1.0"
+  }
+}

@@ -1,0 +1,9 @@
+project_id = "ulptjkyjsbswtzsinywl"
+
+[functions.create-checkout]
+# Session validated using auth.getUser inside the function (publishable-key compatible).
+verify_jwt = false
+
+[functions.fedapay-webhook]
+# FedaPay's signed request is verified inside the handler.
+verify_jwt = false
