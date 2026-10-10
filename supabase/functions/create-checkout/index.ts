@@ -2,10 +2,10 @@ import { admin, fedapay, required, unwrapTransaction, retrieveTransaction, payme
 import { offer, verifiedTransaction } from '../_shared/offers.ts';
 
 Deno.serve(async req => {
-  const origin=new URL(Deno.env.get('APP_ORIGIN')||'https://modexa-boutique.nasserpillar4.chatgpt.site').origin;
+  const origin=new URL(Deno.env.get('APP_ORIGIN')||'https://modexa-sigma.vercel.app').origin;
   const requestOrigin=req.headers.get('origin');
   // Exact app origins only. Authentication still determines the payment owner.
-  const allowed=new Set([origin,'https://modexa-boutique.nasserpillar4.chatgpt.site','http://127.0.0.1:4173','http://localhost:4173']);
+  const allowed=new Set([origin,'https://modexa-sigma.vercel.app','https://modexa-boutique.nasserpillar4.chatgpt.site','http://127.0.0.1:4173','http://localhost:4173']);
   const headers={'Access-Control-Allow-Origin':requestOrigin&&allowed.has(requestOrigin)?requestOrigin:origin,'Access-Control-Allow-Headers':'authorization, apikey, content-type, x-client-info','Access-Control-Allow-Methods':'POST, OPTIONS','Vary':'Origin','Content-Type':'application/json','Cache-Control':'no-store'};
   const response=(data:unknown,status=200)=>new Response(JSON.stringify(data),{status,headers});
   if(requestOrigin&&!allowed.has(requestOrigin))return response({error:'Origine refusée.'},403);

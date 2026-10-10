@@ -32,7 +32,7 @@ Les variables serveur requises sont :
 
 - `FEDAPAY_ENVIRONMENT` : `live` en production, `sandbox` dans un environnement de recette distinct.
 - `FEDAPAY_SECRET_KEY` et `FEDAPAY_WEBHOOK_SECRET` : secrets du même environnement.
-- `APP_ORIGIN` : origine publiée réelle de MODEXA.
+- `APP_ORIGIN` : `https://modexa-sigma.vercel.app`, l'origine utilisée par l'application installée. Cette valeur autorise les appels du navigateur et fixe l'adresse de retour après paiement. Une modification sur GitHub ne met pas à jour cette variable Supabase.
 
 Le webhook écoute `transaction.approved` à l'adresse :
 `https://ulptjkyjsbswtzsinywl.supabase.co/functions/v1/fedapay-webhook`.

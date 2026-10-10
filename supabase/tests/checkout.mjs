@@ -22,7 +22,7 @@ async function evaluate(path){const source=(await readFile(new URL(path,import.m
 await evaluate('../functions/_shared/billing.ts');await evaluate('../functions/create-checkout/index.ts');const checkout=context.handler;
 const request=(body,token=true)=>new Request('https://edge.test',{method:'POST',headers:{'content-type':'application/json',...(token?{authorization:'Bearer test'}:{})},body:JSON.stringify(body)});
 reset();
-for(const origin of ['https://modexa.test','https://modexa-boutique.nasserpillar4.chatgpt.site','http://127.0.0.1:4173','http://localhost:4173']){
+for(const origin of ['https://modexa.test','https://modexa-sigma.vercel.app','https://modexa-boutique.nasserpillar4.chatgpt.site','http://127.0.0.1:4173','http://localhost:4173']){
  const res=await checkout(new Request('https://edge.test',{method:'OPTIONS',headers:{origin}}));
  assert.equal(res.status,204);assert.equal(res.headers.get('access-control-allow-origin'),origin);
  const denied=await checkout(new Request('https://edge.test',{method:'POST',headers:{origin,'content-type':'application/json'},body:'{}'}));
