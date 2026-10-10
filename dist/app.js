@@ -79,6 +79,7 @@ const state = {
   draft: { reference: "", category: "", subcategory: "" },
   authMethod: "phone",
   signup: false,
+  authScreen: "welcome",
   subscription: null,
 };
 let client = null,
@@ -230,7 +231,7 @@ function render() {
       $("#app").innerHTML = bootScreen();
       return;
     }
-    if (!$("#app #auth-form")) renderAuthGate();
+    if (!$("#app #auth-form") && !$("#app .auth-welcome")) renderAuthGate();
     return;
   }
   const focus = document.activeElement?.id,
@@ -371,8 +372,13 @@ function authContent() {
 }
 function renderAuthGate() {
   $("#modal").close();
+  if (state.authScreen === "welcome") {
+    $("#app").innerHTML =
+      `<main class="auth-welcome" aria-labelledby="welcome-title"><h1 id="welcome-title" class="welcome-wordmark">MODEXA</h1><div class="welcome-actions"><button type="button" class="welcome-signup" data-action="welcome-signup">Créer un compte</button><button type="button" class="welcome-login" data-action="welcome-login">Se connecter</button></div></main>`;
+    return;
+  }
   $("#app").innerHTML =
-    `<main class="auth-page"><div class="auth-brand wordmark">MODEXA<span>.</span></div><section class="auth-card" aria-labelledby="auth-title"><div class="eyebrow">Votre boutique, partout avec vous</div><h1 id="auth-title">${state.signup ? "Créer un compte" : "Bienvenue chez vous"}</h1>${authContent()}</section><p class="auth-reassurance">Ajouter. Classer. Retrouver. Partager.</p></main>`;
+    `<main class="auth-page auth-form-page"><button type="button" class="auth-back" data-action="welcome-back" aria-label="Retour à l’accueil">${icon("back")} Retour</button><div class="auth-brand wordmark">MODEXA<span>.</span></div><section class="auth-card" aria-labelledby="auth-title"><h1 id="auth-title">${state.signup ? "Créer un compte" : "Se connecter"}</h1>${authContent()}</section></main>`;
   if (state.initError) $("#auth-error").textContent = state.initError;
 }
 function auth() {
@@ -384,6 +390,7 @@ function auth() {
   }
   if (!state.user) {
     state.booting = false;
+    state.authScreen = "form";
     renderAuthGate();
   } else
     modal(state.signup ? "Créer un compte" : "Se connecter", authContent());
@@ -1040,6 +1047,16 @@ document.addEventListener("click", async (e) => {
       if (action === "search") $("#search").focus();
     } else if (action === "forgot-password") {
       if (!authBusy) recovery.open(state.authMethod);
+    } else if (action === "welcome-signup" || action === "welcome-login") {
+      state.signup = action === "welcome-signup";
+      auth();
+      $("#auth-title")?.setAttribute("tabindex", "-1");
+      $("#auth-title")?.focus();
+    } else if (action === "welcome-back") {
+      if (authBusy) return;
+      state.authScreen = "welcome";
+      renderAuthGate();
+      $("[data-action=welcome-login]")?.focus();
     } else if (action === "auth") auth();
     else if (action === "toggle-signup") {
       state.signup = !state.signup;
@@ -1483,6 +1500,7 @@ function clearUser() {
   state.detailId = null;
   editDraft = null;
   state.user = null;
+  state.authScreen = "welcome";
   state.models = [];
   state.subscription = null;
   state.usage = null;

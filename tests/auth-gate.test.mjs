@@ -24,10 +24,10 @@ try{
   // New visitors must authenticate even when SDK/network never finishes loading.
   const first=fixture(),t=performance.now();await first.api.initialize();
   const firstMs=performance.now()-t;assert.ok(firstMs<1000);
-  assert.ok(first.q('#auth-form'));assert.equal(first.q('.bottom-nav'),null);
+  assert.ok(first.q('.auth-welcome'));assert.equal(first.q('#auth-form'),null);first.q('[data-action=welcome-login]').click();assert.equal(first.q('#auth-title').textContent,'Se connecter');assert.equal(first.q('[name=password_confirmation]'),null);assert.equal(first.q('.bottom-nav'),null);
   assert.equal(first.q('[name=prefix]').value,'+228');assert.equal(first.q('[data-action=close]'),null);
   for(const page of ['home','add','categories','gallery','profile']){first.api.navigate(page);assert.ok(first.q('#auth-form'));assert.equal(first.q('.bottom-nav'),null)}
-  first.q('[data-action=toggle-signup]').click();assert.equal(first.q('#auth-title').textContent,'Créer un compte');
+  first.q('[data-action=welcome-back]').click();assert.ok(first.q('.auth-welcome'));first.q('[data-action=welcome-signup]').click();assert.equal(first.q('#auth-title').textContent,'Créer un compte');
   first.q('[data-auth=email]').click();assert.ok(first.q('[name=email]'));
   first.q('[name=email]').value='fixture@example.test';first.q('[name=password]').value='fixture-pass';first.q('[name=password_confirmation]').value='fixture-pass';first.api.render();
   assert.equal(first.q('[name=password]').value,'fixture-pass','background renders cannot erase typed credentials');
@@ -53,7 +53,7 @@ try{
   const cloud=returning.api.connectCloud(Promise.resolve(null));await new Promise(resolve=>setTimeout(resolve,0));
   assert.ok(returning.q('.product'),'a stalled refresh must not hide local models');
   resolveCloud({data:{session:null},error:null});await cloud;
-  assert.ok(returning.q('#auth-form'));assert.equal(returning.q('.product'),null,'revoked session returns to the gate');
+  assert.ok(returning.q('.auth-welcome'));assert.equal(returning.q('.product'),null,'revoked session returns to the gate');
   // A different account clears both the page and any open modal before IndexedDB resolves.
   const secondUser={id:'00000000-0000-4000-8000-000000000444',email:'second@example.test'};
   await local.setMeta(`draft:${owner}`,{draft:{category:'Robes',subcategory:'Robe bébé',reference:'A-private'},files:[]});
@@ -82,8 +82,8 @@ try{
   resolveInitial({data:{session:{user}},error:null});await connecting;await new Promise(r=>setTimeout(r,0));
   assert.equal(racing.api.state.user,null,'old auth callbacks/bootstrap cannot resurrect a signed-out account');
   // Signing out leaves no open detail, image, navigation or personal data in the DOM.
-  first.api.clearUser();assert.ok(first.q('#auth-form'));assert.equal(first.q('#modal').innerHTML,'');assert.equal(first.q('.bottom-nav'),null);
+  first.api.clearUser();assert.ok(first.q('.auth-welcome'));assert.equal(first.q('#modal').innerHTML,'');assert.equal(first.q('.bottom-nav'),null);
   await local.removeMeta(local.AUTH_KEY);
-  const signedOut=fixture();await signedOut.api.initialize();assert.ok(signedOut.q('#auth-form'));assert.equal(signedOut.q('.product'),null);
+  const signedOut=fixture();await signedOut.api.initialize();assert.ok(signedOut.q('.auth-welcome'));assert.equal(signedOut.q('.product'),null);
   console.log(`PASS: mandatory auth gate; signup/login; rejection; saved session; slow SDK/cloud; invalidation; no signed-out data. Local startup: new ${firstMs.toFixed(0)} ms, returning ${returnMs.toFixed(0)} ms (JSDOM, no network).`);
 }finally{for(const w of windows)w.close()}

@@ -19,8 +19,8 @@ w.eval(catalog+'\n'+app+'\nrequestSync=()=>{}; globalThis.api={state,navigate,au
 const api=w.api,q=s=>w.document.querySelector(s),qa=s=>[...w.document.querySelectorAll(s)],click=s=>q(s).click();
 try{
  api.state.booting=false;api.state.billingKnown=true;
- assert.equal(api.state.models.length,0);api.navigate('home');assert.ok(q('#auth-form'));assert.equal(q('.bottom-nav'),null);assert.equal(q('[data-action=close]'),null);
- api.navigate('add');assert.equal(q('#add-form'),null);assert.ok(q('#auth-form'));
+ assert.equal(api.state.models.length,0);api.navigate('home');assert.ok(q('.auth-welcome'));assert.equal(q('.bottom-nav'),null);assert.equal(q('[data-action=close]'),null);
+ api.navigate('add');assert.equal(q('#add-form'),null);assert.ok(q('.auth-welcome'));
  api.state.user={id:'00000000-0000-4000-8000-000000000111'};
  api.navigate('home');assert.equal(qa('.product').length,0);assert.doesNotMatch(q('#app').textContent,/démonstration|R9538|Robe fleur/);
  api.navigate('categories');assert.equal(qa('[data-subcategory]').length,0);assert.equal(qa('.category-link').length,5);
