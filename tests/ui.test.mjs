@@ -1,3 +1,4 @@
+import {createAccountRecovery,validatePasswords} from '../dist/account-recovery.js';
 import {createPhotoShare} from '../dist/photo-share.js';
 import {createBillingUI} from '../dist/billing-ui.js';
 import 'fake-indexeddb/auto';
@@ -9,11 +10,11 @@ import * as authUtils from '../dist/auth-utils.js';
 const dom=new JSDOM('<div id="app"></div><dialog id="modal"></dialog><div id="toast"></div>',{url:'http://127.0.0.1:4173/',runScripts:'outside-only'}),w=dom.window;
 w.scrollTo=()=>{};w.URL.createObjectURL=()=>`blob:test-${Math.random()}`;w.URL.revokeObjectURL=()=>{};
 w.HTMLDialogElement.prototype.showModal=function(){this.open=true};w.HTMLDialogElement.prototype.close=function(){this.open=false};
-Object.assign(w,local,authUtils,{createBillingUI,createPhotoShare});
+Object.assign(w,local,authUtils,{createBillingUI,createPhotoShare,createAccountRecovery,validatePasswords});
 Object.defineProperty(w.navigator,'onLine',{configurable:true,value:false});
 const css=w.document.createElement('style');css.textContent=fs.readFileSync(new URL('../dist/style.css',import.meta.url),'utf8');w.document.head.append(css);
 const catalog=fs.readFileSync(new URL('../dist/catalog.js',import.meta.url),'utf8').replaceAll('export ','');
-const app=fs.readFileSync(new URL('../dist/app.js',import.meta.url),'utf8').replace(/^import[^\n]*\n/gm,'').replace(/initialize\(\);\s*$/,'');
+const app=fs.readFileSync(new URL('../dist/app.js',import.meta.url),'utf8').replace(/^import[\s\S]*?;\r?\n/gm,'').replace(/initialize\(\);\s*$/,'');
 w.eval(catalog+'\n'+app+'\nrequestSync=()=>{}; globalThis.api={state,navigate,auth,submitAuth,saveModel,editModelModal,saveEditedModel,deleteModel,prepareShare,detail,setClient(c){client=c}};');
 const api=w.api,q=s=>w.document.querySelector(s),qa=s=>[...w.document.querySelectorAll(s)],click=s=>q(s).click();
 try{
@@ -113,7 +114,7 @@ try{
  let credentials;
  api.setClient({auth:{signUp:async input=>{credentials=input;return {data:{session:{},user:{id:owner}},error:null}},signInWithPassword:async input=>{credentials=input;return {data:{session:{},user:{id:owner}},error:null}}}});
  Object.defineProperty(w.navigator,'onLine',{configurable:true,value:true});
- q('[name=phone]').value='+228 90 12 34 56';q('[name=password]').value='random-example';await api.submitAuth(q('#auth-form'));assert.equal(credentials.phone,'+22890123456');assert.equal(q('#modal').open,false);
+ q('[name=phone]').value='+228 90 12 34 56';q('[name=password]').value='random-example';q('[name=password_confirmation]').value='random-example';await api.submitAuth(q('#auth-form'));assert.equal(credentials.phone,'+22890123456');assert.equal(q('#modal').open,false);
  api.state.signup=false;api.state.authMethod='email';api.auth();assert.equal(q('[name=password]').hasAttribute('minlength'),false);q('[name=email]').value='Example@Example.com';q('[name=password]').value='short';await api.submitAuth(q('#auth-form'));assert.equal(credentials.email,'example@example.com');assert.equal(credentials.password,'short');
  console.log('PASS: required photo/category/subcategory; optional reference; silent sync; full-photo styling; offline model edit/delete; progressive categories; signup/login.');
 }finally{dom.window.close()}

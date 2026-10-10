@@ -12,9 +12,9 @@ Application web mobile en français, noir #000, blanc #fff, orange #ff6600.
 - Formulaires Ajouter et Modifier : au moins une photo, catégorie et sous-catégorie obligatoires ; référence facultative. Le nom est déduit du classement. Les anciennes fiches incomplètes restent lisibles ; compléter les champs lors de leur modification. La base reste compatible avec ces anciennes fiches et les files locales antérieures.
 - Client Supabase configuré avec le projet `ulptjkyjsbswtzsinywl` et sa clé publique. Aucune clé secrète dans le navigateur.
 - Enregistrement local prioritaire dans IndexedDB : modèles, photos, favoris et brouillon d'ajout. La confirmation apparaît après l’écriture locale, sans attendre Supabase. Une file persistante envoie ensuite les changements et reprend après interruption.
-- Schéma SQL, bucket privé et fonctions FedaPay **déployés le 4 octobre 2026** dans le projet MODEXA. Les trois tables ont RLS activé ; seul `service_role` peut confirmer un paiement.
+- Schéma SQL, bucket privé et fonctions FedaPay **déployés le 4 octobre 2026** dans le projet MODEXA. Les quatre tables applicatives définies par les migrations ont RLS activé ; seul `service_role` peut confirmer un paiement. Le déploiement effectif des migrations suivantes doit être vérifié sur le projet.
 - Contrôles serveur effectués : création de paiement sans session refusée (401), notification sans signature refusée (400). E-mail et téléphone sont activés sans confirmation pour la V1, à la demande du propriétaire ; réglages publics vérifiés le 6 octobre 2026.
-- Les secrets FedaPay live et le webhook ont été configurés par le propriétaire. La synchronisation entre deux appareils et l'activation Pro après paiement restent à valider de bout en bout.
+- Le propriétaire avait indiqué avoir configuré les secrets FedaPay live et le webhook. Cet état historique n’a pas été revérifié lors des corrections locales ; ne pas le remplacer par des secrets sandbox sur la base de cette documentation. La synchronisation entre deux appareils et l'activation Pro après paiement restent à valider de bout en bout.
 
 ## 1. Initialiser Supabase
 
@@ -24,7 +24,7 @@ Cette étape est déjà réalisée dans le projet MODEXA : **ne pas réexécuter
 - `subscriptions` et `payments` : consultation par le propriétaire ; écritures réservées aux fonctions serveur.
 - Bucket **privé** `model-images` : JPG/PNG/WebP, maximum 10 Mo/photo ; dossiers préfixés par l'identifiant authentifié.
 - RLS sur chaque table et sur les objets de stockage ; contrôle de propriété également sur les chemins JSON.
-- Confirmation des paiements idempotente dans une transaction SQL, avec prolongation d'un mois civil et verrouillage des lignes.
+- Confirmation des paiements idempotente dans une transaction SQL, avec prolongation de 30 jours par mois acheté et verrouillage des lignes.
 
 L’ajout écrit atomiquement la fiche et ses photos sur l’appareil. Le synchroniseur envoie les images sous des chemins déterministes, puis la fiche ; il conserve la file et les fichiers en cas d’échec. Les identifiants stables évitent de créer des doublons après une réponse réseau perdue. Les photos cloud sont téléchargées avec la session authentifiée et mises en cache dans IndexedDB au fil de la consultation. Aucun bucket public ni lien public permanent n’est créé.
 
@@ -38,6 +38,18 @@ E-mail/mot de passe est déjà activé. Configurer le service SMTP pour la produ
 - Redirect URLs : cette même origine et `http://127.0.0.1:4173` pour les essais locaux.
 
 La session Supabase et le catalogue local restent dans IndexedDB pour maintenir la connexion et permettre la consultation hors connexion. Chaque fiche, photo et brouillon est séparé par identifiant de propriétaire. Le même compte retrouve les données déjà synchronisées sur un autre téléphone ; un nouvel appareil nécessite une connexion internet pour les récupérer. La connexion et les paiements nécessitent toujours le réseau.
+
+## Récupération de compte et confirmation du mot de passe
+
+L’inscription comporte un second champ obligatoire « Confirmer le mot de passe ». Les deux valeurs doivent correspondre exactement ; elles ne sont ni raccourcies ni normalisées. Les règles d’inscription sans validation e-mail/SMS restent inchangées.
+
+Le bouton « Mot de passe oublié ? » utilise le mode de connexion sélectionné :
+
+- E-mail : demande de lien Supabase, puis formulaire de nouveau mot de passe après l’événement vérifié de récupération.
+- Téléphone : demande de code SMS pour un compte existant seulement, vérification du code, puis nouveau mot de passe.
+- Les deux parcours demandent de confirmer le nouveau mot de passe et traitent les liens/codes expirés.
+
+L’envoi réel requiert un service e-mail fonctionnel, les URL de retour autorisées et, pour le téléphone, un fournisseur SMS configuré. Ces services n’ont pas été configurés ou testés en production dans cette modification. Le code ne simule pas un envoi réussi si le fournisseur refuse la demande. La récupération ne réactive pas la vérification lors de l’inscription.
 
 ## 3. Activer FedaPay
 
@@ -65,6 +77,8 @@ Sur ordinateur ou navigateur incompatible, télécharger les photos puis ouvrir 
 
 ## Sauvegarde locale et arrière-plan
 
+- Les photos retirées sont supprimées localement à l’enregistrement. Une file persistante nettoie leur copie distante après confirmation de la nouvelle fiche ; un échec reprend automatiquement. Les suppressions historiques sans chemin conservé ne font pas l’objet d’un effacement global du bucket.
+- Les échecs sont suivis dans un diagnostic local par compte et relancés avec un délai progressif de 5 secondes à 5 minutes lorsque le navigateur fonctionne. Aucun bandeau ni message de synchronisation n’est affiché. Une référence en conflit ou des droits épuisés exigent une correction ou un renouvellement ; ils ne sont pas contournés.
 - L’écran reste utilisable pendant l’envoi. Les fichiers déjà envoyés ne sont pas retransmis lorsqu’un favori change.
 - Les modèles récents apparaissent immédiatement ; les galeries chargent les cartes par groupes de 60 et les photos visibles avec trois téléchargements simultanés au maximum.
 - Un conflit de référence reste local et se résout dans la fiche du modèle.
@@ -92,6 +106,10 @@ Le 7 octobre 2026, des comptes temporaires ont validé sur Supabase l’inscript
 
 Le dépôt contient le code, les migrations, les fonctions et les tests. `dist/config.js` ne contient que l’URL Supabase et la clé **publique publishable**. Les secrets FedaPay et service_role restent exclusivement dans Supabase.
 
+## Maintenance
+
+Les responsabilités des modules, les commandes de mise en forme et le classement des outils historiques sont décrits dans [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
+
 ## Sources techniques
 
 Validation locale : migration exécutée dans PostgreSQL embarqué (PGlite), tests d'isolation de lecture/écriture entre deux comptes, stockage privé, interdiction de modifier les abonnements depuis un compte client, replay d'un paiement et renouvellement : réussis. Parcours de la première version vérifiés auparavant dans le navigateur : recherche par référence et sous-catégorie, sélection, préparation de partage, profil sans navigation, téléphone +228 et basculement e-mail. Ceci ne remplace pas la recette sur le projet Supabase ni un paiement sandbox FedaPay.
@@ -110,4 +128,4 @@ Toucher la photo d’un modèle ouvre une fiche avec une image entière, sans re
 
 À la demande explicite du propriétaire, les 2 comptes, 6 modèles, 2 photos et 1 enregistrement de paiement ont été supprimés du projet MODEXA. Les tables, le bucket privé, les règles RLS et les fonctions de paiement restent en place. Le catalogue démarre vide ; les catégories sont uniquement la structure de classement.
 
-La version 2 d’IndexedDB efface une seule fois les données de l’ancienne version : photos locales, brouillons, file d’envoi et sessions. Les anciennes sessions localStorage ne sont plus migrées. Le service worker renouvelle le cache puis recharge les onglets à son activation. Sur un appareil hors ligne, ce nettoyage ne peut se produire qu’après réception de la mise à jour. Les nouveaux comptes et données créés après la réinitialisation persistent normalement.
+La version 2 d’IndexedDB efface une seule fois les données de l’ancienne version : photos locales, brouillons, file d’envoi et sessions. Les anciennes sessions localStorage ne sont plus migrées. Le service worker renouvelle le cache sans recharger les onglets ouverts, afin de préserver les formulaires en cours. Sur un appareil hors ligne, ce nettoyage ne peut se produire qu’après réception de la mise à jour. Les nouveaux comptes et données créés après la réinitialisation persistent normalement.

@@ -8,9 +8,9 @@ const context={URL,console,setTimeout,clearTimeout,
  self:{registration:{scope:'https://modexa.test/'},location:{origin:'https://modexa.test'},addEventListener(name,fn){listeners[name]=fn},skipWaiting:async()=>{},clients:{claim:async()=>{},matchAll:async()=>[{postMessage(){},navigate(){throw Error('Update must not reload an open form')}}]}},
  caches:{open:async()=>cache,keys:async()=>['modexa-shell-v1','unrelated-cache'],delete:async name=>removed.push(name),match:async req=>cache.match(req)},
  fetch:async()=>{network++;if(!online)throw Error('Offline');return {ok:true,clone(){return this}}},
- openDB:async()=>{},storedSession:async()=>({user:{id:'owner-test'}}),makeClient:()=>({}),syncOwner:async(_c,owner,_notify,pull)=>{ownerSeen=owner;assert.equal(pull,false);return ran}
+ getMeta:async()=>null,openDB:async()=>{},storedSession:async()=>({user:{id:'owner-test'}}),makeClient:()=>({}),runBackgroundSync:async(_c,owner,_notify,pull)=>{ownerSeen=owner;assert.equal(pull,false);return ran}
 };
-const source=fs.readFileSync(new URL('../dist/sw.js',import.meta.url),'utf8').replace(/^import[^\n]*\n/gm,'');
+const source=fs.readFileSync(new URL('../dist/sw.js',import.meta.url),'utf8').replace(/^import[\s\S]*?;\r?\n/gm,'');
 vm.runInNewContext(source,context);
 async function event(name,extra={}){let result;listeners[name]({...extra,waitUntil(p){result=p}});return result}
 await event('install');await event('activate');assert.deepEqual(removed,['modexa-shell-v1']);

@@ -1,0 +1,21 @@
+import 'fake-indexeddb/auto';
+import assert from 'node:assert/strict';
+import {setMeta,getMeta,AUTH_KEY} from '../dist/local-store.js';
+import {runBackgroundSync,retryDelay} from '../dist/sync-runner.js';
+
+const owner='retry-owner';
+await setMeta(AUTH_KEY,JSON.stringify({user:{id:owner}}));
+let failed=true,calls=0;
+const client={auth:{getUser:async()=>{calls++;return failed?{data:{},error:{code:'NETWORK',message:'private response'}}:{data:{user:{id:owner}}}}}};
+await assert.rejects(runBackgroundSync(client,owner));
+let health=await getMeta(`sync-health:${owner}`);
+assert.equal(health.attempts,1);assert.ok(health.nextRetry>Date.now());
+assert.equal(health.errorCode,'NETWORK');assert.doesNotMatch(JSON.stringify(health),/private response/);
+await assert.rejects(runBackgroundSync(client,owner));
+health=await getMeta(`sync-health:${owner}`);assert.equal(health.attempts,2);
+assert.ok(retryDelay(2)>retryDelay(1));assert.equal(retryDelay(100),300000);
+failed=false;await runBackgroundSync(client,owner);
+health=await getMeta(`sync-health:${owner}`);assert.equal(health.attempts,0);assert.equal(health.nextRetry,0);assert.ok(health.lastSuccess);
+await setMeta(AUTH_KEY,JSON.stringify({user:{id:'other'}}));
+const before=calls;assert.equal(await runBackgroundSync(client,owner),false);assert.equal(calls,before);
+console.log('PASS: persistent failure diagnostics; bounded retry delay; successful recovery; account isolation.');

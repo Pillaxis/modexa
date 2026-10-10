@@ -1,3 +1,4 @@
+import {createAccountRecovery,validatePasswords} from '../dist/account-recovery.js';
 import {createPhotoShare} from '../dist/photo-share.js';
 import {createBillingUI} from '../dist/billing-ui.js';
 import 'fake-indexeddb/auto';
@@ -8,13 +9,13 @@ import * as local from '../dist/local-store.js';
 import * as authUtils from '../dist/auth-utils.js';
 
 const catalog=fs.readFileSync(new URL('../dist/catalog.js',import.meta.url),'utf8').replaceAll('export ','');
-const app=fs.readFileSync(new URL('../dist/app.js',import.meta.url),'utf8').replace(/^import[^\n]*\n/gm,'').replace(/initialize\(\);\s*$/,'');
+const app=fs.readFileSync(new URL('../dist/app.js',import.meta.url),'utf8').replace(/^import[\s\S]*?;\r?\n/gm,'').replace(/initialize\(\);\s*$/,'');
 const windows=[];
 function fixture(){
   const dom=new JSDOM('<div id="app"></div><dialog id="modal"></dialog><div id="toast"></div>',{url:'https://modexa.example/',runScripts:'outside-only'}),w=dom.window;
   windows.push(w);w.scrollTo=()=>{};w.URL.createObjectURL=()=>`blob:test`;w.URL.revokeObjectURL=()=>{};
   w.HTMLDialogElement.prototype.showModal=function(){this.open=true};w.HTMLDialogElement.prototype.close=function(){this.open=false};
-  Object.assign(w,local,authUtils,{createBillingUI,createPhotoShare});w.migrateSession=async()=>{};
+  Object.assign(w,local,authUtils,{createBillingUI,createPhotoShare,createAccountRecovery,validatePasswords});w.migrateSession=async()=>{};
   w.eval(catalog+'\n'+app+'\nrequestSync=()=>{};loadAuthSDK=()=>new Promise(()=>{});globalThis.api={state,acceptUser,detail,prepareShare,initialize,connectCloud,clearUser,navigate,render,submitAuth,setClient(c){client=c}}');
   return {w,api:w.api,q:s=>w.document.querySelector(s)};
 }
@@ -28,8 +29,14 @@ try{
   for(const page of ['home','add','categories','gallery','profile']){first.api.navigate(page);assert.ok(first.q('#auth-form'));assert.equal(first.q('.bottom-nav'),null)}
   first.q('[data-action=toggle-signup]').click();assert.equal(first.q('#auth-title').textContent,'Créer un compte');
   first.q('[data-auth=email]').click();assert.ok(first.q('[name=email]'));
-  first.q('[name=email]').value='fixture@example.test';first.q('[name=password]').value='fixture-pass';first.api.render();
+  first.q('[name=email]').value='fixture@example.test';first.q('[name=password]').value='fixture-pass';first.q('[name=password_confirmation]').value='fixture-pass';first.api.render();
   assert.equal(first.q('[name=password]').value,'fixture-pass','background renders cannot erase typed credentials');
+  let signupCalls=0;
+  first.api.setClient({auth:{signUp:async()=>{signupCalls++;throw Error('Should not be called')}}});
+  first.q('[name=password_confirmation]').value='different-pass';
+  await first.api.submitAuth(first.q('#auth-form'));
+  assert.equal(signupCalls,0);assert.match(first.q('#auth-error').textContent,/identiques/);
+  first.q('[name=password_confirmation]').value='fixture-pass';
   first.api.setClient({auth:{signUp:async()=>({data:{},error:Error('Invalid login credentials')})}});
   await first.api.submitAuth(first.q('#auth-form'));
   assert.ok(first.q('#auth-error').textContent);assert.equal(first.api.state.user,null);assert.equal(first.q('.bottom-nav'),null);

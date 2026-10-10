@@ -1,27 +1,42 @@
-# Réglages restants de MODEXA
+# Configuration de MODEXA V1
 
-La base, les règles de confidentialité, le stockage privé et les fonctions de paiement sont installés. Il n'est plus nécessaire de copier le SQL.
+Ce document distingue les réglages attendus des vérifications à effectuer sur le service déployé. Le dépôt GitHub et les tests locaux ne prouvent pas à eux seuls que les mêmes migrations, fonctions ou paramètres sont actifs dans Supabase.
 
-## Inscription V1 : e-mail et téléphone +228
+## Comptes et inscription
 
-E-mail et téléphone sont activés, sans confirmation, à la demande du propriétaire pour la V1. Les réglages ont été vérifiés le 6 octobre 2026 : `email=true`, `phone=true`, `mailer_autoconfirm=true`, `phone_autoconfirm=true`. Aucun SMS de validation n'est envoyé. Les adresses et numéros ne sont pas vérifiés à l'inscription.
+L'e-mail et le téléphone avec mot de passe restent utilisables **sans confirmation à l'inscription** pour la V1. Ne pas changer `mailer_autoconfirm` ou `phone_autoconfirm` pour mettre en place la récupération de compte. La confirmation du mot de passe dans le formulaire est une seconde saisie, indépendante de la vérification de l'adresse ou du numéro.
 
-## Vérifications ultérieures
+## Mot de passe oublié
 
-Pour réactiver les confirmations, configurer d'abord un fournisseur SMTP et un fournisseur SMS, puis les options correspondantes dans [Authentication du projet MODEXA](https://supabase.com/dashboard/project/ulptjkyjsbswtzsinywl/auth/providers).
+Le code comprend les deux parcours : lien par e-mail et code SMS pour un compte existant. L'utilisateur choisit ensuite son nouveau mot de passe et le confirme.
 
-Dans [URL Configuration](https://supabase.com/dashboard/project/ulptjkyjsbswtzsinywl/auth/url-configuration), définir l'URL de MODEXA comme Site URL et Redirect URL. Tant que le site n'est pas publié, utiliser `http://127.0.0.1:4173` pour les essais locaux. L'origine prévue après publication est `https://modexa-boutique.nasserpillar4.chatgpt.site`.
+À vérifier dans Supabase avant de considérer les envois opérationnels :
 
-## FedaPay
+1. Le service SMTP et l'adresse d'expédition permettent l'envoi aux utilisateurs.
+2. Le fournisseur SMS est configuré pour les comptes par téléphone. L'inscription sans SMS ne signifie pas que l'envoi de codes de récupération est disponible.
+3. Dans [URL Configuration](https://supabase.com/dashboard/project/ulptjkyjsbswtzsinywl/auth/url-configuration), la Site URL et les Redirect URLs correspondent à l'origine réellement publiée. L'origine consignée est `https://modexa-boutique.nasserpillar4.chatgpt.site` ; pour les essais locaux, utiliser `http://127.0.0.1:4173/`.
+4. Le modèle d'e-mail de récupération conserve le lien Supabase de récupération.
+5. Vérifier sur un compte de recette : réception, lien/code expiré, confirmation différente, changement du mot de passe et connexion avec le nouveau mot de passe.
 
-1. Créer un webhook dans le tableau de bord FedaPay, événement `transaction.approved`, URL :
-   `https://ulptjkyjsbswtzsinywl.supabase.co/functions/v1/fedapay-webhook`
-2. Dans les [secrets Supabase](https://supabase.com/dashboard/project/ulptjkyjsbswtzsinywl/functions/secrets), ajouter directement :
-   - `FEDAPAY_SECRET_KEY` : clé secrète FedaPay sandbox.
-   - `FEDAPAY_WEBHOOK_SECRET` : secret du webhook sandbox.
-   - `FEDAPAY_ENVIRONMENT` : `sandbox`.
-   - `APP_ORIGIN` : URL publiée de MODEXA (ou origine locale pendant un essai local).
-3. Vérifier les offres : Pro 7 000 / 18 900 / 58 800 XOF et Business 15 000 / 40 500 / 126 000 XOF pour 1 / 3 / 12 mois. Confirmer après paiement les quotas Pro 100 / 300 / 1 200 et Business 1 000 / 3 000 / 12 000, puis les recharges Pro 50/3 600 ou 100/7 000 et Business 500/7 600 ou 1 000/15 000. Vérifier l’épuisement, l’expiration indépendante de 30 jours des recharges, l’obligation de renouveler le principal, la conservation des anciens modèles et la répétition du webhook (aucun double crédit). Aucun paiement réel n'est effectué automatiquement par les tests.
-4. Passer à `live` avec les clés et le webhook de production uniquement après validation.
+Les tests automatisés simulent ces parcours sans envoyer d'e-mail ou de SMS. Les services d'envoi n'ont pas été reconfigurés lors de cette correction.
 
-Ne transmettez aucune clé secrète dans le chat et ne les ajoutez pas à `dist/config.js`. Le prix et la devise sont fixés côté serveur. Les abonnements se renouvellent manuellement ; aucun prélèvement automatique n'est effectué.
+## Base de données
+
+Les migrations du dépôt définissent les modèles, abonnements, paiements et crédits avec règles RLS, ainsi que le stockage privé des images. Comparer leur liste à l'historique des migrations appliquées avant toute opération. Ne pas rejouer une migration déjà appliquée.
+
+## Paiements FedaPay
+
+Le propriétaire avait indiqué avoir configuré les secrets de production et le webhook. Cette information est historique : la configuration active n'a pas été relue lors de la correction du code. **Ne pas remplacer les clés live par des clés sandbox sur le projet de production.**
+
+Les variables serveur requises sont :
+
+- `FEDAPAY_ENVIRONMENT` : `live` en production, `sandbox` dans un environnement de recette distinct.
+- `FEDAPAY_SECRET_KEY` et `FEDAPAY_WEBHOOK_SECRET` : secrets du même environnement.
+- `APP_ORIGIN` : origine publiée réelle de MODEXA.
+
+Le webhook écoute `transaction.approved` à l'adresse :
+`https://ulptjkyjsbswtzsinywl.supabase.co/functions/v1/fedapay-webhook`.
+
+La recette doit couvrir les offres et prix du [README](README.md), les recharges, les expirations, un renouvellement anticipé et la répétition d'un webhook sans double crédit. Les durées sont de **30, 90 ou 360 jours**. Les recharges expirent 30 jours après paiement et exigent un abonnement principal actif.
+
+Un paiement complet en production n'a pas été effectué par les tests locaux. Les secrets restent dans Supabase ; aucune clé d'administration ou de paiement ne doit être ajoutée aux fichiers du navigateur.
