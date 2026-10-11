@@ -1,12 +1,14 @@
+import {nativeWhatsApp} from './native-whatsapp.js';
 export function createPhotoShare({doc,getAccountKey,loadPhoto,modal,toast}){
   const win=doc.defaultView,nav=win.navigator,$=s=>doc.querySelector(s);
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const maximum=20;
+  const nativeSend=nativeWhatsApp(win);
   let items=[],selected=new Set(),files=[],key=null,version=0,urls=[];
   function reset(){version++;for(const url of urls)win.URL.revokeObjectURL(url);urls=[];items=[];selected.clear();files=[];key=null}
   function active(ticket){return ticket===version&&key&&getAccountKey()===key}
   function render(){
-    modal('Choisir les photos',`<p class="modal-copy">Sélectionnez jusqu’à ${maximum} photos. Elles seront transmises ensemble ; choisissez WhatsApp, puis le destinataire ou le groupe.</p><div class="share-photo-grid">${items.map((i,n)=>`<label class="share-photo"><input type="checkbox" data-share-photo="${n}" ${selected.has(n)?'checked':''}>${i.url?`<img src="${esc(i.url)}" alt="${esc(i.label)}">`:'<span class="share-placeholder">Photo '+(n+1)+'</span>'}<span>${esc(i.label)}</span></label>`).join('')}</div><p data-share-status role="status"></p><button class="primary" data-share-send disabled>Préparation des photos…</button><button class="secondary" data-share-retry hidden>Réessayer la préparation</button><button class="secondary" data-share-download hidden>Télécharger les photos sélectionnées</button>`);
+    modal('Choisir les photos',`<p class="modal-copy">Sélectionnez jusqu’à ${maximum} photos. ${nativeSend ? "WhatsApp s’ouvrira directement ; choisissez le destinataire ou le groupe." : "Elles seront transmises ensemble ; choisissez WhatsApp, puis le destinataire ou le groupe."}</p><div class="share-photo-grid">${items.map((i,n)=>`<label class="share-photo"><input type="checkbox" data-share-photo="${n}" ${selected.has(n)?'checked':''}>${i.url?`<img src="${esc(i.url)}" alt="${esc(i.label)}">`:'<span class="share-placeholder">Photo '+(n+1)+'</span>'}<span>${esc(i.label)}</span></label>`).join('')}</div><p data-share-status role="status"></p><button class="primary" data-share-send disabled>Préparation des photos…</button><button class="secondary" data-share-retry hidden>Réessayer la préparation</button><button class="secondary" data-share-download hidden>Télécharger les photos sélectionnées</button>`);
   }
   async function prepare(){
     const ticket=++version;files=[];const send=$('[data-share-send]'),status=$('[data-share-status]');if(!send)return;
@@ -20,7 +22,7 @@ export function createPhotoShare({doc,getAccountKey,loadPhoto,modal,toast}){
         if(!item.url){item.url=win.URL.createObjectURL(blob);urls.push(item.url);const index=items.indexOf(item),label=$(`[data-share-photo="${index}"]`)?.parentElement;if(label){const placeholder=label.querySelector('.share-placeholder');if(placeholder){const img=doc.createElement('img');img.src=item.url;img.alt=item.label;placeholder.replaceWith(img)}}}
       }}));
       if(!active(ticket))return;files=result;send.textContent=`Partager ${files.length} photo${files.length>1?'s':''} sur WhatsApp`;
-      if(nav.share&&nav.canShare?.({files})){send.disabled=false;status.textContent=files.length+' photo(s) prête(s) pour un seul partage.'}
+      if(nativeSend||(nav.share&&nav.canShare?.({files}))){send.disabled=false;status.textContent=files.length+' photo(s) prête(s) pour un seul partage.'}
       else{send.hidden=true;$('[data-share-download]').hidden=false;status.textContent='Ce navigateur ne permet pas le partage de photos. Téléchargez les photos puis joignez-les ensemble dans WhatsApp.'}
     }catch(error){if(active(ticket)){status.textContent=error.message;$('[data-share-retry]').hidden=false;send.textContent='Photos indisponibles'}}
   }
@@ -33,6 +35,13 @@ export function createPhotoShare({doc,getAccountKey,loadPhoto,modal,toast}){
   function send(){
     if(!files.length||!key||getAccountKey()!==key)return;
     const ticket=version;
+    if(nativeSend){
+      const button=$('[data-share-send]');if(button.disabled)return;
+      button.disabled=true;button.textContent='Ouverture de WhatsApp…';
+      for(const input of doc.querySelectorAll('[data-share-photo]'))input.disabled=true;
+      nativeSend([...files],()=>active(ticket)).then(()=>{if(active(ticket))$('#modal').close()}).catch(error=>{if(active(ticket))$('[data-share-status]').textContent=error.message||'Impossible d’ouvrir WhatsApp.'}).finally(()=>{if(active(ticket)){button.disabled=false;button.textContent='Partager sur WhatsApp';for(const input of doc.querySelectorAll('[data-share-photo]'))input.disabled=false}});
+      return;
+    }
     // Must run synchronously inside the click: awaiting downloads here loses mobile user activation.
     try{Promise.resolve(nav.share({files:[...files],title:'MODEXA'})).then(()=>{if(active(ticket))$('#modal').close()}).catch(error=>{if(active(ticket)&&error.name!=='AbortError')$('[data-share-status]').textContent='Le partage n’a pas abouti. Touchez à nouveau le bouton pour réessayer.'})}
     catch{if(active(ticket))$('[data-share-status]').textContent='Le partage n’est pas disponible sur ce navigateur.'}

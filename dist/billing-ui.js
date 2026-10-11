@@ -4,7 +4,10 @@ export function createBillingUI({state,getClient,modal,toast,render,requestSync,
   const win=doc.defaultView,$=s=>doc.querySelector(s);
   let generation=0;const requests=new Set();
   const guard=()=>{const owner=state.user?.id,version=generation;return ()=>Boolean(owner)&&state.user?.id===owner&&version===generation};
-  function reset(){generation++;clearTimeout(pollTimer);for(const c of requests)c.abort();requests.clear();busy=false;checking=false;refreshing=null;choice='pro';months=1;kind='subscription';topup=50}
+  let progress;
+  function hideProgress(){if(progress){progress.close();progress.remove();progress=null}}
+  function showProgress(){hideProgress();progress=doc.createElement('dialog');progress.className='payment-progress';progress.setAttribute('aria-label','Ouverture du paiement');progress.innerHTML='<div role="status" aria-live="polite"><span class="payment-spinner" aria-hidden="true"></span><p>En cours…</p></div>';progress.addEventListener('cancel',e=>e.preventDefault());doc.body.append(progress);progress.showModal()}
+  function reset(){hideProgress();generation++;clearTimeout(pollTimer);for(const c of requests)c.abort();requests.clear();busy=false;checking=false;refreshing=null;choice='pro';months=1;kind='subscription';topup=50}
   let kind='subscription',topup=50;
   let choice='pro',months=1,busy=false,refreshing=null,checking=false,pollTimer;
   let returned=new URLSearchParams(win.location.search).get('payment');
@@ -61,9 +64,8 @@ export function createBillingUI({state,getClient,modal,toast,render,requestSync,
   }
   async function pay(){
     if(busy||!state.user||!getClient())return;const active=guard();if(!win.navigator.onLine){$('#checkout-error').textContent='Connectez-vous à internet pour payer.';return}
-    busy=true;const owner=state.user.id,button=$('[data-billing-pay]');button.disabled=true;button.textContent='Ouverture du paiement…';$('#checkout-error').textContent='';
+    busy=true;showProgress();const owner=state.user.id,button=$('[data-billing-pay]');button.disabled=true;button.textContent='Ouverture du paiement…';$('#checkout-error').textContent='';
     doc.querySelectorAll('[data-billing-plan],[data-billing-months],[data-billing-kind],[data-billing-topup]').forEach(b=>b.disabled=true);
-    const slow=setTimeout(()=>{if(active()&&$('#checkout-status'))$('#checkout-status').textContent='FedaPay prépare votre paiement. Votre demande est en cours.'},2500);
     try{
       if(kind==='topup'&&!topupAllowed())throw Error('Utilisez vos places restantes ou renouvelez votre abonnement.');
       const data=await call(kind==='topup'?{kind,plan:current().plan,months:1,credits:topup}:{kind,plan:choice,months});if(!active())return;
@@ -71,10 +73,10 @@ export function createBillingUI({state,getClient,modal,toast,render,requestSync,
       const url=new URL(data.url);if(url.protocol!=='https:'||!(url.hostname==='fedapay.com'||url.hostname.endsWith('.fedapay.com')))throw Error('Lien de paiement invalide.');
       await setMeta(`pending-payment:${owner}`,data.payment_id);if(!active())return;win.location.assign(url.href);
     }catch(error){if(active()&&$('#checkout-error'))$('#checkout-error').textContent=error.message}
-    finally{clearTimeout(slow);if(active()){busy=false;if(button.isConnected){button.disabled=false;button.textContent='Payer '+money(price());doc.querySelectorAll('[data-billing-plan],[data-billing-months],[data-billing-kind],[data-billing-topup]').forEach(b=>b.disabled=false);const rechargeButton=$('[data-billing-kind=topup]');if(rechargeButton)rechargeButton.disabled=!topupAllowed()}}}
+    finally{if(active()){hideProgress();busy=false;if(button.isConnected){button.disabled=false;button.textContent='Payer '+money(price());doc.querySelectorAll('[data-billing-plan],[data-billing-months],[data-billing-kind],[data-billing-topup]').forEach(b=>b.disabled=false);const rechargeButton=$('[data-billing-kind=topup]');if(rechargeButton)rechargeButton.disabled=!topupAllowed()}}}
   }
   async function checkPayment(manual=false,attempt=0){
-    const owner=state.user?.id,active=guard();if(!owner||checking||!getClient()||!win.navigator.onLine)return;
+    const owner=state.user?.id,active=guard();if(!owner||busy||checking||!getClient()||!win.navigator.onLine)return;
     const pending=returned&&returned!=='return'?returned:await getMeta(`pending-payment:${owner}`);
     if(!active()||(!pending&&!manual))return;
     checking=true;const el=$('#checkout-status');if(el)el.textContent='Vérification du paiement…';

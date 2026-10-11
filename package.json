@@ -5,15 +5,22 @@
   "type": "module",
   "scripts": {
     "start": "node server.cjs",
-    "test": "node tests/reset.test.mjs && node tests/offline.test.mjs && node tests/ui.test.mjs && node tests/auth-gate.test.mjs && node tests/install.test.mjs && node tests/worker.test.mjs && node tests/billing-ui.test.mjs && node tests/credits.test.mjs && node tests/photo-share.test.mjs && node supabase/tests/isolation.mjs && node supabase/tests/billing.mjs && node supabase/tests/checkout.mjs && node tests/photo-cleanup.test.mjs && node tests/sync-runner.test.mjs && node tests/account-recovery.test.mjs",
+    "android:sync": "cap sync android",
+    "android:open": "cap open android",
+    "test": "node tests/reset.test.mjs && node tests/offline.test.mjs && node tests/ui.test.mjs && node tests/auth-gate.test.mjs && node tests/install.test.mjs && node tests/worker.test.mjs && node tests/billing-ui.test.mjs && node tests/credits.test.mjs && node tests/photo-share.test.mjs && node tests/native-whatsapp.test.mjs && node supabase/tests/isolation.mjs && node supabase/tests/billing.mjs && node supabase/tests/checkout.mjs && node tests/photo-cleanup.test.mjs && node tests/sync-runner.test.mjs && node tests/account-recovery.test.mjs",
     "check": "node scripts/check.mjs",
     "format": "prettier --write dist/app.js dist/style.css dist/local-store.js dist/sync.js dist/sw.js dist/account-recovery.js dist/photo-cleanup.js dist/sync-runner.js",
     "format:check": "prettier --check dist/app.js dist/style.css dist/local-store.js dist/sync.js dist/sw.js dist/account-recovery.js dist/photo-cleanup.js dist/sync-runner.js"
   },
   "devDependencies": {
+    "@capacitor/cli": "8.5.3",
     "@electric-sql/pglite": "0.5.8",
     "fake-indexeddb": "6.2.4",
     "jsdom": "26.1.0",
     "prettier": "3.6.2"
+  },
+  "dependencies": {
+    "@capacitor/android": "8.5.3",
+    "@capacitor/core": "8.5.3"
   }
 }

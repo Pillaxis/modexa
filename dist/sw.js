@@ -3,7 +3,7 @@ import "./vendor/supabase.js";
 import { makeClient } from "./cloud.js";
 import { storedSession, openDB, getMeta } from "./local-store.js";
 import { runBackgroundSync } from "./sync-runner.js";
-const CACHE = "modexa-shell-v17";
+const CACHE = "modexa-shell-v18";
 const ASSETS = [
   "./",
   "./index.html",
@@ -16,6 +16,7 @@ const ASSETS = [
   "./plans.js",
   "./billing-ui.js",
   "./photo-share.js",
+  "./native-whatsapp.js",
   "./catalog.js",
   "./config.js",
   "./local-store.js",

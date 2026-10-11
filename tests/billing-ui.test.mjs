@@ -17,12 +17,14 @@ try{
  q('[data-billing-months="3"]').click();assert.match(q('.billing-summary').textContent,/18\s900/);assert.match(q('[data-billing-plan=pro]').textContent,/300 nouveaux ajouts/);
  q('[data-billing-plan=business]').click();q('[data-billing-months="12"]').click();assert.match(q('.billing-summary').textContent,/126\s000/);assert.match(q('[data-billing-plan=business]').textContent,/12\s000 nouveaux ajouts/);
  q('[data-billing-pay]').click();assert.equal(q('[data-billing-pay]').disabled,true);assert.equal(body.plan,'business');assert.equal(body.months,12);assert.equal(body.amount,undefined);
- resolveCheckout({data:null,error:{context:{json:async()=>({error:'Réseau indisponible'})}}});await new Promise(r=>setTimeout(r,0));assert.match(q('#checkout-error').textContent,/Réseau/);assert.equal(api.canAdd(),false);
+ assert.equal(q('.payment-progress').open,true);assert.match(q('.payment-progress').textContent,/En cours/);assert.ok(q('.payment-spinner'));
+ resolveCheckout({data:null,error:{context:{json:async()=>({error:'Réseau indisponible'})}}});await new Promise(r=>setTimeout(r,0));assert.match(q('#checkout-error').textContent,/Réseau/);assert.equal(api.canAdd(),false);assert.equal(q('.payment-progress'),null,'failure removes the blocking loader');
  sub={status:'active',business_until:new Date(Date.now()+86400000).toISOString()};await api.refresh(true);assert.equal(api.canAdd(),true);assert.equal(api.current().limit,1000);
  assert.equal((await getMeta(`subscription:${owner}`)).status,'active');
  // Late checkout responses and subscription results belong only to the initiating session.
  q('[data-billing-pay]').click();const oldCheckout=resolveCheckout;
  api.reset();state.user={id:'00000000-0000-4000-8000-000000000888'};state.subscription=null;
+ assert.equal(q('.payment-progress'),null,'account reset removes loader');
  oldCheckout({data:{url:'https://checkout.fedapay.com/old-account',payment_id:'old-payment'}});
  await new Promise(r=>setTimeout(r,10));
  assert.equal(await getMeta(`pending-payment:${owner}`),undefined,'old payment cannot redirect/store after switching');

@@ -374,7 +374,7 @@ function renderAuthGate() {
   $("#modal").close();
   if (state.authScreen === "welcome") {
     $("#app").innerHTML =
-      `<main class="auth-welcome" aria-labelledby="welcome-title"><h1 id="welcome-title" class="welcome-wordmark">MODEXA</h1><div class="welcome-actions"><button type="button" class="welcome-signup" data-action="welcome-signup">Créer un compte</button><button type="button" class="welcome-login" data-action="welcome-login">Se connecter</button><nav class="welcome-legal" aria-label="Informations MODEXA"><a href="conditions.html">Conditions</a><a href="confidentialite.html">Confidentialité</a></nav></div></main>`;
+      `<main class="auth-welcome" aria-labelledby="welcome-title"><h1 id="welcome-title" class="welcome-wordmark wordmark">MODEXA<span>.</span></h1><div class="welcome-actions"><button type="button" class="welcome-signup" data-action="welcome-signup">Créer un compte</button><button type="button" class="welcome-login" data-action="welcome-login">Se connecter</button><nav class="welcome-legal" aria-label="Informations MODEXA"><a href="conditions.html">Conditions</a><a href="confidentialite.html">Confidentialité</a></nav></div></main>`;
     return;
   }
   $("#app").innerHTML =
@@ -1207,7 +1207,7 @@ async function initialize() {
   }
   // Network refresh and worker registration never block the first useful screen.
   connectCloud(sdkReady);
-  if ("serviceWorker" in navigator) {
+  if ("serviceWorker" in navigator && !window.Capacitor?.isNativePlatform?.()) {
     navigator.serviceWorker
       .register("./sw.js", { type: "module" })
       .then((r) => {

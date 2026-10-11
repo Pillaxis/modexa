@@ -1,0 +1,10 @@
+{
+  "appId": "com.modexa.app",
+  "appName": "MODEXA",
+  "webDir": "dist",
+  "server": {
+    "hostname": "modexa-sigma.vercel.app",
+    "androidScheme": "https"
+  },
+  "android": { "allowMixedContent": false }
+}

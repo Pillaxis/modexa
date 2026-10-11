@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">MODEXA</string>
+    <string name="title_activity_main">MODEXA</string>
+    <string name="package_name">com.modexa.app</string>
+    <string name="custom_url_scheme">com.modexa.app</string>
+</resources>
