@@ -374,7 +374,7 @@ function renderAuthGate() {
   $("#modal").close();
   if (state.authScreen === "welcome") {
     $("#app").innerHTML =
-      `<main class="auth-welcome" aria-labelledby="welcome-title"><h1 id="welcome-title" class="welcome-wordmark">MODEXA</h1><div class="welcome-actions"><button type="button" class="welcome-signup" data-action="welcome-signup">Créer un compte</button><button type="button" class="welcome-login" data-action="welcome-login">Se connecter</button></div></main>`;
+      `<main class="auth-welcome" aria-labelledby="welcome-title"><h1 id="welcome-title" class="welcome-wordmark">MODEXA</h1><div class="welcome-actions"><button type="button" class="welcome-signup" data-action="welcome-signup">Créer un compte</button><button type="button" class="welcome-login" data-action="welcome-login">Se connecter</button><nav class="welcome-legal" aria-label="Informations MODEXA"><a href="conditions.html">Conditions</a><a href="confidentialite.html">Confidentialité</a></nav></div></main>`;
     return;
   }
   $("#app").innerHTML =
@@ -811,7 +811,7 @@ function profileAction(action) {
   if (action === "help") {
     modal(
       "Comment utiliser MODEXA",
-      `<div class="modal-copy"><p><strong>1. Ajouter</strong><br>Ajoutez au moins une photo, choisissez une catégorie puis une sous-catégorie. Seule la référence est facultative. Pour modifier un modèle, ouvrez sa photo puis touchez « Modifier le modèle ».</p><p><strong>2. Classer et retrouver</strong><br>Parcourez vos catégories ou recherchez un nom, une taille ou une référence.</p><p><strong>3. Sélectionner et partager</strong><br>Dans le catalogue, touchez « Sélectionner », choisissez vos modèles puis partagez sur WhatsApp.</p><p>Vos photos personnelles sont accessibles uniquement depuis votre compte. Le partage transmet les images aux destinataires que vous choisissez.</p></div>`,
+      `<div class="modal-copy"><p><strong>1. Ajouter</strong><br>Ajoutez au moins une photo, choisissez une catégorie puis une sous-catégorie. Seule la référence est facultative. Pour modifier un modèle, ouvrez sa photo puis touchez « Modifier le modèle ».</p><p><strong>2. Classer et retrouver</strong><br>Parcourez vos catégories ou recherchez un nom, une taille ou une référence.</p><p><strong>3. Sélectionner et partager</strong><br>Dans le catalogue, touchez « Sélectionner », choisissez vos modèles puis partagez sur WhatsApp.</p><p>Vos photos personnelles sont accessibles uniquement depuis votre compte. Le partage transmet les images aux destinataires que vous choisissez.</p><p><a href="conditions.html">Conditions d’utilisation</a> · <a href="confidentialite.html">Confidentialité</a></p><section class="help-contact" aria-label="Contacter MODEXA"><h3>Besoin d’aide ?</h3><p>Contactez MODEXA :<br><a href="tel:+22892880010">+228 92 88 00 10</a><br><a href="mailto:nasserpillar4@gmail.com">nasserpillar4@gmail.com</a></p></section></div>`,
     );
     return;
   }

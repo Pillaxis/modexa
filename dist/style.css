@@ -1459,8 +1459,8 @@ dialog.model-detail {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: max(16svh, env(safe-area-inset-top)) 8%
-    calc(64px + env(safe-area-inset-bottom));
+  padding: max(21svh, env(safe-area-inset-top)) 8%
+    calc(32px + env(safe-area-inset-bottom));
   background: #000;
 }
 .auth-welcome::before {
@@ -1469,7 +1469,7 @@ dialog.model-detail {
   inset: 0;
   z-index: -1;
   background:
-    linear-gradient(#0007, #0006 50%, #0009),
+    linear-gradient(#0003, #0002 50%, #0008),
     url("./assets/welcome-fashion.jpg") center / cover no-repeat;
 }
 .welcome-wordmark {
@@ -1488,6 +1488,99 @@ dialog.model-detail {
   gap: 18px;
   margin-top: auto;
   padding-top: 180px;
+}
+.welcome-legal {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px 28px;
+  margin-top: 8px;
+}
+.welcome-legal a {
+  color: #ff98b7;
+  text-underline-offset: 5px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  font-weight: 600;
+}
+.legal-page {
+  max-width: 760px;
+  margin: auto;
+  padding: 28px 24px calc(40px + env(safe-area-inset-bottom));
+  line-height: 1.75;
+  overflow-wrap: anywhere;
+  color: #d4d4d8;
+}
+.legal-back {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-bottom: 22px;
+}
+.legal-page .wordmark {
+  color: #fff;
+}
+.legal-page .wordmark span {
+  color: var(--accent);
+}
+.legal-page h1 {
+  color: #fff;
+  font-size: clamp(30px, 6vw, 44px);
+  line-height: 1.15;
+  margin: 12px 0;
+  letter-spacing: -1px;
+}
+.legal-kicker {
+  color: #ff98b7;
+  margin-top: 24px;
+}
+.legal-date {
+  color: var(--muted);
+  font-size: 14px;
+  margin-bottom: 28px;
+}
+.legal-page section {
+  margin-top: 32px;
+}
+.legal-page h2 {
+  color: #fff;
+  font-size: 21px;
+  line-height: 1.35;
+  margin-bottom: 12px;
+}
+.legal-page p + p {
+  margin-top: 12px;
+}
+.legal-page ul {
+  padding-left: 22px;
+}
+.legal-page li + li {
+  margin-top: 12px;
+}
+.legal-page a,
+.help-contact a {
+  text-underline-offset: 4px;
+}
+.legal-contact,
+.help-contact {
+  border-top: 1px solid var(--line);
+  padding-top: 24px;
+}
+.help-contact {
+  margin-top: 24px;
+  overflow-wrap: anywhere;
+}
+.legal-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  margin-top: 36px;
+}
+.legal-nav a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
 }
 .welcome-actions button {
   width: 100%;

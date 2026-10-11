@@ -16,6 +16,7 @@ async function event(name,extra={}){let result;listeners[name]({...extra,waitUnt
 await event('install');await event('activate');assert.deepEqual(removed,['modexa-shell-v1']);
 async function fetchEvent(url,method='GET'){let result;listeners.fetch({request:{url,method},respondWith(p){result=p}});return result}
 assert.ok((await fetchEvent('https://modexa.test/app.js')).shell);assert.equal(network,0,'Shell must load instantly from cache');
+for(const path of ['conditions.html','confidentialite.html','assets/welcome-fashion.jpg'])assert.ok((await fetchEvent('https://modexa.test/'+path)).shell,'welcome and legal pages must remain accessible offline');
 for(const url of ['https://supabase.test/rest/v1/models','https://modexa.test/private.jpg','https://modexa.test/?code=secret'])assert.equal(await fetchEvent(url),undefined);
 assert.equal(await fetchEvent('https://modexa.test/app.js','POST'),undefined);
 await event('sync',{tag:'modexa-upload'});assert.equal(ownerSeen,'owner-test');
